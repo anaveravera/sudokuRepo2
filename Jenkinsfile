@@ -47,7 +47,13 @@ pipeline {
         }
       }
       steps {
-        echo 'Deploy STAGING (placeholder): Render/VPS/SSH/API.'
+        sh '''
+          if [ -z "$STAGING_DEPLOY_HOOK" ]; then
+            echo "STAGING_DEPLOY_HOOK no configurado. Saltando deploy real."
+            exit 0
+          fi
+          curl -fsS -X POST "$STAGING_DEPLOY_HOOK"
+        '''
       }
     }
 
@@ -59,7 +65,13 @@ pipeline {
         }
       }
       steps {
-        echo 'Smoke test STAGING (placeholder): curl health endpoint.'
+        sh '''
+          if [ -z "$STAGING_HEALTHCHECK_URL" ]; then
+            echo "STAGING_HEALTHCHECK_URL no configurado. Saltando smoke test."
+            exit 0
+          fi
+          curl -fsS "$STAGING_HEALTHCHECK_URL/health.php"
+        '''
       }
     }
 
@@ -83,7 +95,19 @@ pipeline {
         }
       }
       steps {
-        echo 'Deploy PRODUCCION (placeholder): Render/VPS/SSH/API.'
+        sh '''
+          if [ -z "$PRODUCTION_DEPLOY_HOOK" ]; then
+            echo "PRODUCTION_DEPLOY_HOOK no configurado. Saltando deploy real."
+            exit 0
+          fi
+          curl -fsS -X POST "$PRODUCTION_DEPLOY_HOOK"
+
+          if [ -z "$PRODUCTION_HEALTHCHECK_URL" ]; then
+            echo "PRODUCTION_HEALTHCHECK_URL no configurado. Saltando smoke test prod."
+            exit 0
+          fi
+          curl -fsS "$PRODUCTION_HEALTHCHECK_URL/health.php"
+        '''
       }
     }
   }
